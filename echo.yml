@@ -1,0 +1,25 @@
+- name: Echo a message
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    msg: ""   # Control-M मधून येईल
+
+  tasks:
+    - name: Validate
+      ansible.builtin.assert:
+        that: msg | length > 0
+        fail_msg: "Provide 'msg' via extra_vars"
+
+    - name: Print with debug (AWX/CTM output मध्ये स्पष्ट दिसेल)
+      ansible.builtin.debug:
+        msg: "MSG={{ msg }}"
+
+    - name: (Optional) Shell echo (फक्त दाखवण्यासाठी)
+      ansible.builtin.shell: 'echo "MSG={{ msg }}"'
+      register: echo_out
+      changed_when: false
+
+    - name: Show shell stdout
+      ansible.builtin.debug:
+        var: echo_out.stdout
