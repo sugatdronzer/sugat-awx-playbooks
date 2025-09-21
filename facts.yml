@@ -1,0 +1,31 @@
+- name: Gather & print system facts
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: System summary
+      vars:
+        host: "{{ ansible_facts.fqdn | default(ansible_facts.hostname) }}"
+        os_name: "{{ ansible_facts.distribution | default(ansible_facts.os_family) }}"
+        os_ver: "{{ ansible_facts.distribution_version | default(ansible_facts.distribution_release | default('')) }}"
+        kernel: "{{ ansible_facts.kernel | default('N/A') }}"
+        arch: "{{ ansible_facts.architecture | default('N/A') }}"
+        ip: "{{ ansible_facts.default_ipv4.address | default('N/A') }}"
+        mem_mb: "{{ ansible_facts.memtotal_mb | default('N/A') }}"
+        cpu: >-
+          {{ (ansible_facts.processor_count | default('?')) }} x
+          {{ (ansible_facts.processor_cores | default(ansible_facts.processor_vcpus | default('?'))) }}
+        python_ver: >-
+          {{ ansible_facts.python.version.string
+             | default(ansible_facts.python_version | default('N/A')) }}
+      ansible.builtin.debug:
+        msg: |
+          === SYSTEM SUMMARY ===
+          Hostname       : {{ host }}
+          OS             : {{ os_name }} {{ os_ver }}
+          Kernel         : {{ kernel }}
+          Architecture   : {{ arch }}
+          IP (default)   : {{ ip }}
+          Memory (MB)    : {{ mem_mb }}
+          CPU            : {{ cpu }}
+          Python         : {{ python_ver }}
