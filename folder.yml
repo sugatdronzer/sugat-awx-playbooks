@@ -1,0 +1,38 @@
+- name: Check folder exists on localhost
+  hosts: localhost
+  gather_facts: false
+  any_errors_fatal: true
+
+  vars:
+    base_path: ""     # e.g. /tmp or /var/log
+    folder_name: ""   # e.g. reports
+
+  tasks:
+    - name: Validate inputs
+      ansible.builtin.assert:
+        that:
+          - base_path | length > 0
+          - folder_name | length > 0
+        fail_msg: "Both 'base_path' and 'folder_name' are required."
+
+    - name: Build absolute path
+      ansible.builtin.set_fact:
+        target_path: "{{ (base_path | regex_replace('/+$','')) ~ '/' ~ (folder_name | regex_replace('^/+','')) }}"
+
+    - name: Stat folder
+      ansible.builtin.stat:
+        path: "{{ target_path }}"
+      register: st
+      changed_when: false
+
+    - name: Log result
+      ansible.builtin.debug:
+        msg: "Checking '{{ target_path }}' exists={{ st.stat.exists | default(false) }} isdir={{ st.stat.isdir | default(false) }}"
+
+    - name: Enforce success only if directory exists
+      ansible.builtin.assert:
+        that:
+          - st.stat.exists
+          - st.stat.isdir
+        success_msg: "OK: Directory exists: {{ target_path }}"
+        fail_msg: "FAILED: Directory not found or not a directory: {{ target_path }}"
